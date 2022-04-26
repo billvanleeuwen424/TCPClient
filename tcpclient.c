@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
+        //if the server has sent us anything, read it. else break.
         if(FD_ISSET(socket_peer, &reads)){
             char read[4096];
             int bytes_rec = recv(socket_peer, read, sizeof(read), 0);
@@ -78,11 +79,20 @@ int main(int argc, char *argv[]) {
             printf("Recieved %d bytes from server.\n%.*s", bytes_rec, bytes_rec, read);
         }
 
-        
-
+        //if anything has been written to the terminal, read and send it. else break.
+        if(FD_ISSET(0, &reads)){
+            char read[4096];
+            if(!fgets(read,sizeof(read), stdin)){
+                break;
+            }
+            printf("Sending.\n");
+            int bytes_sent = send(socket_peer, read, strlen(read), 0);
+            printf("Sent %d bytes.\n", bytes_sent);
+        }
     }
+
+    printf("Closing socket.\n");
+    close(socket_peer);
     
-
-
     return 0;
 }
