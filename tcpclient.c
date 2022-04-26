@@ -40,7 +40,49 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Connection failure: %s\n", strerror(errno));
         return 1;
     }
+    //free unneeded address mem
+    freeaddrinfo(peer_address);
 
+    printf("Connected Successfully.\n");
+    printf("Enter text into terminal to send data.\n");
+
+
+    while (1)
+    {
+        //create set for file descriptors. 
+        fd_set reads;
+        FD_ZERO(&reads);
+
+        //add socket, stdin to set
+        FD_SET(socket_peer, &reads);
+        FD_SET(0, &reads);
+
+        //100ms
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
+
+        //wait for readable data from fdset
+        if(select(socket_peer+1, &reads, 0,0,&timeout) < 0){
+            fprintf(stderr, "Select() failure: %s\n", strerror(errno));
+            return 1;
+        }
+
+        if(FD_ISSET(socket_peer, &reads)){
+            char read[4096];
+            int bytes_rec = recv(socket_peer, read, sizeof(read), 0);
+            if(bytes_rec < 1){
+                printf("Connection closed.\n");
+                break;
+            }
+            printf("Recieved %d bytes from server.\n%.*s", bytes_rec, bytes_rec, read);
+        }
+
+        
+
+    }
     
 
+
+    return 0;
 }
